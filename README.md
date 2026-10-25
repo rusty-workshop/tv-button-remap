@@ -15,6 +15,20 @@ TV, which opens YouTube. Accessibility key filtering sees the key first, so
 this service consumes it and launches SmartTube. If SmartTube isn't
 installed, the button falls through to its normal behavior.
 
+It also shows **pop-ups** (bottom-right card, 12 s, never takes focus) for
+anything that sends:
+
+```bash
+adb -s 192.168.1.75:5555 shell am broadcast -n com.rusty.tvremap/.MessageReceiver \
+  --es title "'Ready to watch'" --es text "'Some Movie (2003)'"
+```
+
+The receiver requires `android.permission.DUMP`, which adb's shell holds
+and normal apps can't, so only adb can trigger it. The window is an
+accessibility overlay, so it needs no "display over other apps" permission.
+[latitude-jellyfin](../latitude-jellyfin) uses it for new-movie
+announcements.
+
 The gear button is `KEYCODE_BUTTON_2` (189), normally routed to Sony's
 quick-settings receiver. To know which app is in front, the service listens
 for window-state changes and only counts real activities, so toasts and the

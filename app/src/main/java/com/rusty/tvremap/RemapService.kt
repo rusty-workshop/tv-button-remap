@@ -39,6 +39,23 @@ class RemapService : AccessibilityService() {
 
     private val handler = Handler(Looper.getMainLooper())
 
+    private var popup: Popup? = null
+
+    override fun onServiceConnected() {
+        popup = Popup(this)
+        instance = this
+    }
+
+    override fun onDestroy() {
+        if (instance === this) instance = null
+        popup?.dismiss()
+        super.onDestroy()
+    }
+
+    fun showPopup(title: String, text: String) {
+        popup?.show(title, text)
+    }
+
     override fun onKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
             Log.d(TAG, "key ${event.keyCode} (${KeyEvent.keyCodeToString(event.keyCode)}) fg=$foreground/$foregroundClass")
@@ -118,16 +135,20 @@ class RemapService : AccessibilityService() {
 
     override fun onInterrupt() {}
 
-    private companion object {
-        const val TAG = "TvButtonRemap"
-        const val LAUNCHER = "com.spocky.projengmenu"
+    companion object {
+        // Running service, for MessageReceiver to draw pop-ups through.
+        var instance: RemapService? = null
+            private set
+
+        private const val TAG = "TvButtonRemap"
+        private const val LAUNCHER = "com.spocky.projengmenu"
         // All side panels, not just settings: backing out of the settings
         // panel lands on the all-apps side panel underneath it.
-        val LAUNCHER_SETTINGS = listOf(
+        private val LAUNCHER_SETTINGS = listOf(
             "$LAUNCHER.ui.sidePanels.",
             "$LAUNCHER.ui.guidedActions.",
         )
-        const val MAX_BACKS = 6
-        const val BACK_DELAY_MS = 250L
+        private const val MAX_BACKS = 6
+        private const val BACK_DELAY_MS = 250L
     }
 }
