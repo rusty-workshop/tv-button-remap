@@ -4,8 +4,10 @@ A tiny Android TV accessibility service for the Sony BRAVIA remote:
 
 - **YouTube** button opens **SmartTube** instead, everywhere.
 - **Settings** (gear) button opens **Projectivy's settings**, but only while
-  the Projectivy home screen is in front. In any other app it opens Sony's
-  settings as usual.
+  the Projectivy home screen is in front. Pressing it again while
+  Projectivy's settings (or any of its side panels or sub-screens) are open
+  backs out of all of them to the home screen. In any other app it opens
+  Sony's settings as usual.
 
 The YouTube button sends `KEYCODE_BUTTON_9` (196). Android routes it through
 the global-key table to Sony's `sonyvendorservice`, which hands it to Google

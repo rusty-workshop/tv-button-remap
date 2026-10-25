@@ -4,6 +4,8 @@ import android.accessibilityservice.AccessibilityService
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
@@ -31,15 +33,20 @@ class RemapService : AccessibilityService() {
         KeyEvent.KEYCODE_BUTTON_2 to "tv.projectivy.SETTINGS",
     )
 
-    // Package of the last activity that came to the foreground.
+    // Package and class of the last activity that came to the foreground.
     private var foreground: String? = null
+    private var foregroundClass: String? = null
+
+    private val handler = Handler(Looper.getMainLooper())
 
     override fun onKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
-            Log.d(TAG, "key ${event.keyCode} (${KeyEvent.keyCodeToString(event.keyCode)}) fg=$foreground")
+            Log.d(TAG, "key ${event.keyCode} (${KeyEvent.keyCodeToString(event.keyCode)}) fg=$foreground/$foregroundClass")
         }
         remaps[event.keyCode]?.let { return launchPackage(event, it) }
         launcherRemaps[event.keyCode]?.let { action ->
+            // Pressing it again while Projectivy's settings are open closes them.
+            if (inLauncherSettings()) return closeLauncherSettings(event)
             if (foreground == LAUNCHER) return launchAction(event, action)
         }
         return false
@@ -69,6 +76,28 @@ class RemapService : AccessibilityService() {
         return true
     }
 
+    // Projectivy's side panels, plus the guided-action screens opened from them.
+    private fun inLauncherSettings(): Boolean {
+        val cls = foregroundClass ?: return false
+        return foreground == LAUNCHER && LAUNCHER_SETTINGS.any { cls.startsWith(it) }
+    }
+
+    // Back out of the settings panel and any sub-screens, one level at a
+    // time, until Projectivy's home screen is in front again.
+    private fun closeLauncherSettings(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
+            Log.i(TAG, "keycode ${event.keyCode} -> close $foregroundClass")
+            backOut(MAX_BACKS)
+        }
+        return true
+    }
+
+    private fun backOut(remaining: Int) {
+        if (remaining == 0 || !inLauncherSettings()) return
+        performGlobalAction(GLOBAL_ACTION_BACK)
+        handler.postDelayed({ backOut(remaining - 1) }, BACK_DELAY_MS)
+    }
+
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
         val pkg = event.packageName?.toString() ?: return
@@ -81,7 +110,10 @@ class RemapService : AccessibilityService() {
         } catch (e: PackageManager.NameNotFoundException) {
             false
         }
-        if (isActivity) foreground = pkg
+        if (isActivity) {
+            foreground = pkg
+            foregroundClass = cls
+        }
     }
 
     override fun onInterrupt() {}
@@ -89,5 +121,13 @@ class RemapService : AccessibilityService() {
     private companion object {
         const val TAG = "TvButtonRemap"
         const val LAUNCHER = "com.spocky.projengmenu"
+        // All side panels, not just settings: backing out of the settings
+        // panel lands on the all-apps side panel underneath it.
+        val LAUNCHER_SETTINGS = listOf(
+            "$LAUNCHER.ui.sidePanels.",
+            "$LAUNCHER.ui.guidedActions.",
+        )
+        const val MAX_BACKS = 6
+        const val BACK_DELAY_MS = 250L
     }
 }
