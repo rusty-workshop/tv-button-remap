@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">TV Button Remap</string>
+    <string name="service_description">Makes the remote\'s YouTube button open SmartTube.</string>
+</resources>
