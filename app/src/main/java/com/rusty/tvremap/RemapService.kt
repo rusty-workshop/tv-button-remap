@@ -1,14 +1,16 @@
 package com.rusty.tvremap
 
 import android.accessibilityservice.AccessibilityService
+import android.content.ComponentName
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.util.Log
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 
 /**
  * Catches remote buttons before Sony/Google TV's global-key handling and
- * opens a different app instead.
+ * opens something else instead.
  *
  * On the BRAVIA, the YouTube button sends KEYCODE_BUTTON_9 (196), which the
  * system routes to sonyvendorservice -> Google TV -> YouTube. Accessibility
@@ -17,32 +19,75 @@ import android.view.accessibility.AccessibilityEvent
  */
 class RemapService : AccessibilityService() {
 
-    // keycode -> package to open instead
+    // keycode -> package to open instead, anywhere
     private val remaps = mapOf(
         KeyEvent.KEYCODE_BUTTON_9 to "org.smarttube.stable",
     )
 
+    // keycode -> intent action, only while the launcher is in the foreground.
+    // The remote's gear button is KEYCODE_BUTTON_2 (189), which normally goes
+    // to Sony's quick-settings receiver, not the standard KEYCODE_SETTINGS.
+    private val launcherRemaps = mapOf(
+        KeyEvent.KEYCODE_BUTTON_2 to "tv.projectivy.SETTINGS",
+    )
+
+    // Package of the last activity that came to the foreground.
+    private var foreground: String? = null
+
     override fun onKeyEvent(event: KeyEvent): Boolean {
-        val target = remaps[event.keyCode] ?: return false
+        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
+            Log.d(TAG, "key ${event.keyCode} (${KeyEvent.keyCodeToString(event.keyCode)}) fg=$foreground")
+        }
+        remaps[event.keyCode]?.let { return launchPackage(event, it) }
+        launcherRemaps[event.keyCode]?.let { action ->
+            if (foreground == LAUNCHER) return launchAction(event, action)
+        }
+        return false
+    }
+
+    private fun launchPackage(event: KeyEvent, target: String): Boolean {
         val launch = packageManager.getLeanbackLaunchIntentForPackage(target)
             ?: packageManager.getLaunchIntentForPackage(target)
         // Target uninstalled: let the button do its normal thing.
         if (launch == null) return false
+        return fire(event, launch, target)
+    }
 
-        // Swallow both down and up so the original app never sees either;
-        // launch once per press, ignoring key repeat from holding it.
+    private fun launchAction(event: KeyEvent, action: String): Boolean {
+        val launch = Intent(action)
+        if (launch.resolveActivity(packageManager) == null) return false
+        return fire(event, launch, action)
+    }
+
+    // Swallow both down and up so the original handler never sees either;
+    // launch once per press, ignoring key repeat from holding it.
+    private fun fire(event: KeyEvent, launch: Intent, label: String): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
-            Log.i(TAG, "keycode ${event.keyCode} -> $target")
+            Log.i(TAG, "keycode ${event.keyCode} -> $label")
             startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }
         return true
     }
 
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
+        val pkg = event.packageName?.toString() ?: return
+        val cls = event.className?.toString() ?: return
+        // Only count real activities, so toasts, the volume bar and other
+        // system overlays don't make us think the launcher was left.
+        val isActivity = try {
+            packageManager.getActivityInfo(ComponentName(pkg, cls), 0)
+            true
+        } catch (e: PackageManager.NameNotFoundException) {
+            false
+        }
+        if (isActivity) foreground = pkg
+    }
 
     override fun onInterrupt() {}
 
     private companion object {
         const val TAG = "TvButtonRemap"
+        const val LAUNCHER = "com.spocky.projengmenu"
     }
 }
