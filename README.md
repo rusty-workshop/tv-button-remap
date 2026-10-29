@@ -26,7 +26,7 @@ adb -s 192.168.1.75:5555 shell am broadcast -n com.rusty.tvremap/.MessageReceive
 The receiver requires `android.permission.DUMP`, which adb's shell holds
 and normal apps can't, so only adb can trigger it. The window is an
 accessibility overlay, so it needs no "display over other apps" permission.
-[latitude-jellyfin](../latitude-jellyfin) uses it for new-movie
+My Jellyfin setup uses it for new-movie
 announcements.
 
 The gear button is `KEYCODE_BUTTON_2` (189), normally routed to Sony's

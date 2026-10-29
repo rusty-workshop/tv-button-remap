@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TV Button Remap</title>
+<meta name="description" content="A tiny Android TV accessibility service that makes a Sony BRAVIA remote's buttons do what you actually want.">
+<meta property="og:title" content="TV Button Remap">
+<meta property="og:description" content="Make your TV remote's buttons do what you actually want.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='9' y='2' width='14' height='28' rx='7' fill='%231c1c1f'/><circle cx='16' cy='10' r='3' fill='%23ff6a2b'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&family=Archivo+Black&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#e9e6e1; --bg2:#dedad3; --card:#f5f3ef; --ink:#1c1c1f; --ink2:#5d5a55; --line:#c9c3b9;
+    --orange:#ff6a2b; --blue:#2f6bff; --green:#1fa45b; --remote:#1b1b1e; --remote2:#2a2a2f;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans',system-ui,sans-serif; -webkit-font-smoothing:antialiased;}
+  a{color:inherit;}
+  .wrap{max-width:1180px; margin:0 auto; padding-inline:clamp(16px,4vw,40px);}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  nav{display:flex; justify-content:space-between; align-items:center; padding-block:22px; border-bottom:1px solid var(--line);}
+  .logo{font-family:'Archivo Black'; font-size:1.1rem; text-decoration:none; letter-spacing:.01em; display:flex; align-items:center; gap:10px;}
+  .logo i{width:12px; height:26px; border-radius:6px; background:var(--remote); position:relative;}
+  .logo i::after{content:''; position:absolute; left:3px; top:4px; width:6px; height:6px; border-radius:50%; background:var(--orange);}
+  nav .links{display:flex; gap:20px; font-size:.9rem;}
+  nav .links a{text-decoration:none; color:var(--ink2);} nav .links a:hover{color:var(--ink);}
+
+  .hero{display:grid; grid-template-columns:1fr auto 1.1fr; gap:clamp(24px,4vw,56px); align-items:center; padding-block:60px 80px;}
+  .label{font-family:'IBM Plex Mono'; font-size:.74rem; letter-spacing:.12em; text-transform:uppercase; color:var(--ink2);}
+  h1{font-family:'Archivo Black'; font-weight:400; font-size:clamp(2.4rem,5vw,4.4rem); line-height:.95; letter-spacing:-.02em; margin:14px 0 18px;}
+  h1 em{font-style:normal; color:var(--orange);}
+  .lede{font-size:1.08rem; line-height:1.6; color:var(--ink2); margin:0 0 24px;}
+  .spec{display:grid; grid-template-columns:auto 1fr; gap:6px 16px; font-family:'IBM Plex Mono'; font-size:.8rem; border-top:1px solid var(--line); padding-top:16px;}
+  .spec dt{color:var(--ink2);} .spec dd{margin:0;}
+  .btn{display:inline-flex; gap:8px; align-items:center; padding:13px 20px; border-radius:10px; background:var(--ink); color:#fff; text-decoration:none; font-weight:700; margin-top:22px; box-shadow:0 3px 0 #000; transition: transform .1s, box-shadow .1s;}
+  .btn:active{transform:translateY(3px); box-shadow:none;}
+
+  /* the remote */
+  .remote{width:178px; padding:26px 20px 34px; border-radius:46px 46px 60px 60px; background:linear-gradient(180deg,var(--remote2),var(--remote) 30%); box-shadow: 0 40px 60px -20px rgba(0,0,0,.45), inset 0 2px 0 rgba(255,255,255,.08), inset 0 -4px 0 rgba(0,0,0,.4); display:grid; gap:14px; justify-items:center; user-select:none;}
+  .remote .ir{width:22px; height:6px; border-radius:3px; background:#3a1010; margin-bottom:4px;}
+  .rb{border:none; cursor:pointer; font-family:'IBM Plex Sans'; color:#d8d8dc; background:linear-gradient(180deg,#38383e,#25252a); box-shadow:0 3px 0 #0b0b0d, inset 0 1px 0 rgba(255,255,255,.1); transition: transform .08s, box-shadow .08s, filter .2s; position:relative;}
+  .rb:active, .rb.press{transform:translateY(3px); box-shadow:0 0 0 #0b0b0d, inset 0 1px 0 rgba(255,255,255,.1);}
+  .rb.round{width:40px; height:40px; border-radius:50%; font-size:.95rem;}
+  .row{display:flex; gap:12px;}
+  .dpad{width:130px; height:130px; border-radius:50%; background:linear-gradient(180deg,#34343a,#222226); box-shadow:0 3px 0 #0b0b0d, inset 0 1px 0 rgba(255,255,255,.08); position:relative;}
+  .dpad .ok{position:absolute; inset:34%; border-radius:50%; background:#2c2c32; box-shadow:inset 0 2px 4px rgba(0,0,0,.5);}
+  .dpad span{position:absolute; color:#77777e; font-size:.7rem;}
+  .apps{display:grid; grid-template-columns:1fr 1fr; gap:10px; width:100%;}
+  .apps .rb{height:30px; border-radius:9px; font-size:.68rem; font-weight:700; letter-spacing:.04em;}
+  .rb.yt{background:linear-gradient(180deg,#e6262c,#b81c21); color:#fff; box-shadow:0 3px 0 #6b0e11;}
+  .rb.nf{color:#e50914;}
+  .rb.gear svg{width:18px; height:18px;}
+  .rb.glow::before{content:''; position:absolute; inset:-6px; border-radius:inherit; border:2px solid var(--orange); animation: halo 1.6s ease-out infinite;}
+  @keyframes halo{ from{opacity:1; transform:scale(.9);} to{opacity:0; transform:scale(1.25);} }
+  .remote .brand{font-family:'IBM Plex Mono'; font-size:.6rem; color:#55555c; letter-spacing:.3em; margin-top:6px;}
+
+  /* the TV + log */
+  .tvbox{display:grid; gap:14px;}
+  .tv{aspect-ratio:16/9; border-radius:10px; background:#000; padding:8px; box-shadow:0 30px 50px -20px rgba(0,0,0,.35);}
+  .tvs{position:relative; height:100%; border-radius:4px; overflow:hidden; background:#101014; color:#fff;}
+  .app{position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; padding:7%; opacity:0; transition:opacity .4s ease, transform .5s cubic-bezier(.2,.8,.2,1); transform:scale(1.04);}
+  .app.on{opacity:1; transform:none;}
+  .app h4{margin:0 0 6px; font-family:'Archivo Black'; font-weight:400; font-size:clamp(1rem,2.2vw,1.5rem);}
+  .app p{margin:0; font-size:.8rem; opacity:.7;}
+  .app .rowcards{display:flex; gap:8px; margin-top:14px;}
+  .app .rowcards i{flex:1; aspect-ratio:16/10; border-radius:6px; background:rgba(255,255,255,.12);}
+  .a-home{background:linear-gradient(135deg,#1d2a44,#3d2a52);}
+  .a-home .rowcards i:first-child{outline:2px solid #fff;}
+  .a-st{background:linear-gradient(135deg,#1b1b1b,#2b0f0f);} .a-st h4{color:#ff4e45;}
+  .a-proj{background:#14181f;} .a-proj .side{position:absolute; right:0; top:0; bottom:0; width:42%; background:#1f2632; padding:6%; font-size:.72rem; display:grid; align-content:start; gap:8px;}
+  .a-proj .side b{font-size:.85rem;} .a-proj .side span{padding:6px 8px; border-radius:6px; background:rgba(255,255,255,.06);} .a-proj .side span:first-of-type{background:rgba(47,107,255,.4);}
+  .a-sony{background:linear-gradient(135deg,#0d1b2a,#16263a);}
+  .popup{position:absolute; right:4%; bottom:6%; width:44%; background:rgba(20,20,24,.92); border-left:3px solid var(--orange); border-radius:6px; padding:10px 12px; font-size:.72rem; transform:translateX(120%); transition:transform .5s cubic-bezier(.2,.8,.2,1);}
+  .popup.show{transform:none;}
+  .popup b{display:block; font-size:.8rem;}
+  .log{background:var(--ink); color:#cfcac2; border-radius:10px; padding:14px 16px; font-family:'IBM Plex Mono'; font-size:.74rem; line-height:1.7; height:150px; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end;}
+  .log .k{color:var(--orange);} .log .g{color:#6fd39a;} .log .d{color:#7d786f;}
+  .hint{font-family:'IBM Plex Mono'; font-size:.75rem; color:var(--ink2); text-align:center;}
+
+  section{padding-block:80px; border-top:1px solid var(--line);}
+  .sh{font-family:'Archivo Black'; font-weight:400; font-size:clamp(2rem,4.4vw,3.4rem); line-height:1; letter-spacing:-.02em; margin:0 0 14px;}
+  .sp{color:var(--ink2); font-size:1.06rem; line-height:1.65; max-width:62ch; margin:0 0 36px;}
+  .maps{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+  .map{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px;}
+  .map .key{display:inline-flex; align-items:center; gap:8px; font-family:'IBM Plex Mono'; font-size:.74rem; padding:5px 10px; border-radius:6px; background:var(--bg2); margin-bottom:12px;}
+  .map h3{margin:0 0 8px; font-size:1.2rem;} .map p{margin:0; color:var(--ink2); line-height:1.6; font-size:.95rem;}
+  .chain{display:flex; flex-wrap:wrap; align-items:center; gap:10px; font-family:'IBM Plex Mono'; font-size:.8rem; margin:10px 0 0;}
+  .chain span{padding:8px 12px; border:1px solid var(--line); border-radius:8px; background:var(--card);}
+  .chain span.x{text-decoration:line-through; opacity:.55;}
+  .chain span.hot{background:var(--orange); color:#fff; border-color:var(--orange);}
+  .chain b{color:var(--ink2);}
+  .facts{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:16px; overflow:hidden;}
+  .facts div{background:var(--card); padding:22px;}
+  .facts b{font-family:'Archivo Black'; font-weight:400; font-size:1.8rem; display:block;}
+  .facts span{color:var(--ink2); font-size:.9rem;}
+  pre{background:var(--ink); color:#e8e4dc; border-radius:14px; padding:20px; overflow:auto; font-family:'IBM Plex Mono'; font-size:.8rem; line-height:1.7;}
+  pre .c{color:#857f75;}
+  footer{border-top:1px solid var(--line); padding-block:30px 60px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; font-size:.9rem; color:var(--ink2);}
+  .reveal{opacity:0; transform:translateY(20px); transition: all .7s cubic-bezier(.2,.8,.2,1);} .reveal.in{opacity:1; transform:none;}
+
+  @media (max-width:980px){ .hero{grid-template-columns:1fr; justify-items:center;} .hero > div:first-child{text-align:left; justify-self:stretch;} .tvbox{width:100%;} .maps{grid-template-columns:1fr;} .facts{grid-template-columns:1fr 1fr;} }
+  @media (prefers-reduced-motion:reduce){ *{animation:none !important; transition:none !important;} .reveal{opacity:1; transform:none;} }
+</style>
+</head>
+<body>
+<header class="wrap">
+  <nav>
+    <a class="logo" href="#"><i></i>TV Button Remap</a>
+    <div class="links"><a href="#how">How</a><a href="#install">Install</a><a href="https://github.com/rusty-workshop/tv-button-remap">GitHub ↗</a></div>
+  </nav>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <div>
+      <div class="label">android tv · accessibility service · sony bravia</div>
+      <h1>Your remote,<br><em>your rules.</em></h1>
+      <p class="lede">The Sony remote has a YouTube button and a settings button, and neither does what I want. This tiny service quietly fixes both, and adds pop-up notifications the homelab can send to the TV.</p>
+      <dl class="spec">
+        <dt>UI</dt><dd>none</dd>
+        <dt>network</dt><dd>none</dd>
+        <dt>reads screen</dt><dd>no, never</dd>
+        <dt>size</dt><dd>3 Kotlin files</dd>
+      </dl>
+      <a class="btn" href="https://github.com/rusty-workshop/tv-button-remap">Get it on GitHub ↗</a>
+    </div>
+
+    <div class="remote" id="remote">
+      <div class="ir"></div>
+      <div class="row"><button class="rb round" type="button" aria-label="Power">⏻</button><button class="rb round gear glow" id="btnGear" type="button" aria-label="Settings button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg></button></div>
+      <div class="dpad"><span style="left:46%;top:6px">▲</span><span style="left:46%;bottom:6px">▼</span><span style="left:8px;top:44%">◀</span><span style="right:8px;top:44%">▶</span><div class="ok"></div></div>
+      <div class="row"><button class="rb round" id="btnBack" type="button" aria-label="Back">↩</button><button class="rb round" id="btnHome" type="button" aria-label="Home">⌂</button></div>
+      <div class="apps"><button class="rb yt glow" id="btnYT" type="button">YouTube</button><button class="rb nf" type="button">NETFLIX</button><button class="rb" type="button">prime</button><button class="rb" type="button">disney+</button></div>
+      <div class="brand">SONY</div>
+    </div>
+
+    <div class="tvbox">
+      <div class="tv"><div class="tvs">
+        <div class="app a-home on" data-app="home"><h4>Projectivy</h4><p>home screen</p><div class="rowcards"><i></i><i></i><i></i><i></i></div></div>
+        <div class="app a-st" data-app="smarttube"><h4>SmartTube</h4><p>no ads, no nonsense</p><div class="rowcards"><i></i><i></i><i></i></div></div>
+        <div class="app a-proj" data-app="projset"><h4>Projectivy</h4><p>home screen</p><div class="side"><b>Settings</b><span>Appearance</span><span>Channels</span><span>Wallpaper</span><span>About</span></div></div>
+        <div class="app a-sony" data-app="sony"><h4>Sony settings</h4><p>picture · sound · network</p></div>
+        <div class="popup" id="tvPopup"><b>Ready to watch</b>Spirited Away (2001)</div>
+      </div></div>
+      <div class="log" id="rmLog"><div class="d">TvButtonRemap service connected</div></div>
+      <div class="hint">press the glowing buttons on the remote</div>
+    </div>
+  </div>
+
+  <section class="wrap" id="how">
+    <h2 class="sh reveal">Three small fixes.</h2>
+    <p class="sp reveal">Accessibility key filtering sees a key press before anything else on the TV does. That's the whole trick: catch the press, decide, and either swallow it or let it through.</p>
+    <div class="maps">
+      <div class="map reveal"><span class="key">KEYCODE_BUTTON_9 · 196</span><h3>YouTube → SmartTube</h3><p>Everywhere. If SmartTube isn't installed, the button falls through and does what it always did.</p></div>
+      <div class="map reveal"><span class="key">KEYCODE_BUTTON_2 · 189</span><h3>Gear → Projectivy settings</h3><p>Only on the Projectivy home screen. Press again inside its settings or side panels and it backs all the way out. In any other app, Sony's settings open as usual.</p></div>
+      <div class="map reveal"><span class="key">am broadcast · DUMP only</span><h3>Pop-ups from the homelab</h3><p>A bottom-right card for 12 seconds that never steals focus. Only adb can send one, so nothing else on the TV can spam you. My Jellyfin setup uses it to announce new movies.</p></div>
+    </div>
+    <div class="reveal" style="margin-top:40px">
+      <div class="label">what normally happens to the YouTube button</div>
+      <div class="chain"><span>remote</span><b>→</b><span>global key table</span><b>→</b><span class="x">sonyvendorservice</span><b>→</b><span class="x">Google TV</span><b>→</b><span class="x">YouTube</span></div>
+      <div class="chain"><span>remote</span><b>→</b><span class="hot">TvButtonRemap</span><b>→</b><span>SmartTube</span></div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="facts reveal">
+      <div><b>0</b><span>network permissions</span></div>
+      <div><b>0</b><span>window content read</span></div>
+      <div><b>0</b><span>"display over apps" needed</span></div>
+      <div><b>∞</b><span>buttons you can add</span></div>
+    </div>
+  </section>
+
+  <section class="wrap" id="install">
+    <h2 class="sh reveal">Install.</h2>
+    <p class="sp reveal">Build, install over adb, then switch the service on in Settings → Accessibility. Add your own remaps to the <span class="mono">remaps</span> or <span class="mono">launcherRemaps</span> maps in <span class="mono">RemapService.kt</span>.</p>
+<pre class="reveal">./gradlew assembleRelease
+adb connect &lt;tv-ip&gt;:5555
+adb install -r app/build/outputs/apk/release/app-release.apk
+<span class="c"># find any button's key code</span>
+adb logcat -s TvButtonRemap
+<span class="c"># send a pop-up</span>
+adb shell am broadcast -n com.rusty.tvremap/.MessageReceiver \
+  --es title "'Ready to watch'" --es text "'Some Movie (2003)'"</pre>
+  </section>
+</main>
+
+<footer class="wrap">
+  <span>AGPL-3.0-or-later. Made by <a href="https://rusty.is-a.dev">Rusty</a>. Not affiliated with Sony or Google.</span>
+  <span><a href="https://github.com/rusty-workshop/tv-button-remap">GitHub ↗</a></span>
+</footer>
+
+<script>
+(function(){
+  var app = 'home', log = document.getElementById('rmLog'), popup = document.getElementById('tvPopup');
+  function show(a){ app = a; document.querySelectorAll('.app').forEach(function(el){ el.classList.toggle('on', el.dataset.app === a); }); }
+  function line(html){ var d = document.createElement('div'); d.innerHTML = html; log.appendChild(d); while (log.children.length > 7) log.removeChild(log.firstChild); }
+  function press(btn){ btn.classList.add('press'); setTimeout(function(){ btn.classList.remove('press'); }, 120); }
+
+  document.getElementById('btnYT').addEventListener('click', function(){
+    press(this);
+    line('<span class="k">D/TvButtonRemap</span> key 196 KEYCODE_BUTTON_9');
+    line('<span class="g">  consumed → launch SmartTube</span>');
+    show('smarttube');
+  });
+  document.getElementById('btnGear').addEventListener('click', function(){
+    press(this);
+    line('<span class="k">D/TvButtonRemap</span> key 189 KEYCODE_BUTTON_2 · front: ' + app);
+    if (app === 'home'){ line('<span class="g">  consumed → Projectivy settings</span>'); show('projset'); }
+    else if (app === 'projset'){ line('<span class="g">  consumed → back out to home</span>'); show('home'); }
+    else { line('<span class="d">  not on the launcher, passing through</span>'); show('sony'); }
+  });
+  document.getElementById('btnHome').addEventListener('click', function(){ press(this); line('<span class="d">key HOME, passing through</span>'); show('home'); });
+  document.getElementById('btnBack').addEventListener('click', function(){ press(this); line('<span class="d">key BACK, passing through</span>'); show('home'); });
+
+  setTimeout(function popLoop(){
+    popup.classList.add('show'); line('<span class="k">I/MessageReceiver</span> pop-up: Ready to watch');
+    setTimeout(function(){ popup.classList.remove('show'); }, 4500);
+    setTimeout(popLoop, 22000);
+  }, 6000);
+
+  var io = new IntersectionObserver(function(es){ es.forEach(function(en){ if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } }); }, {threshold:.15});
+  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+})();
+</script>
+</body>
+</html>
