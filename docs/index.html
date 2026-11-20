@@ -70,9 +70,11 @@
   .app .rowcards i{flex:1; aspect-ratio:16/10; border-radius:6px; background:rgba(255,255,255,.12);}
   .a-home{background:linear-gradient(135deg,#1d2a44,#3d2a52);}
   .a-home .rowcards i:first-child{outline:2px solid #fff;}
-  .a-st{background:linear-gradient(135deg,#1b1b1b,#2b0f0f);} .a-st h4{color:#ff4e45;}
-  .a-proj{background:#14181f;} .a-proj .side{position:absolute; right:0; top:0; bottom:0; width:42%; background:#1f2632; padding:6%; font-size:.72rem; display:grid; align-content:start; gap:8px;}
-  .a-proj .side b{font-size:.85rem;} .a-proj .side span{padding:6px 8px; border-radius:6px; background:rgba(255,255,255,.06);} .a-proj .side span:first-of-type{background:rgba(47,107,255,.4);}
+  .a-yt{background:linear-gradient(135deg,#1b1b1b,#2b0f0f);} .a-yt h4{color:#ff4e45;}
+  .a-all{background:linear-gradient(135deg,#171c2e,#0c0e14);}
+  .a-all .grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:14px;}
+  .a-all .grid i{aspect-ratio:16/9; border-radius:5px; background:rgba(255,255,255,.12);}
+  .a-all .grid i:first-child{outline:2px solid #fff;}
   .a-sony{background:linear-gradient(135deg,#0d1b2a,#16263a);}
   .popup{position:absolute; right:4%; bottom:6%; width:44%; background:rgba(20,20,24,.92); border-left:3px solid var(--orange); border-radius:6px; padding:10px 12px; font-size:.72rem; transform:translateX(120%); transition:transform .5s cubic-bezier(.2,.8,.2,1);}
   .popup.show{transform:none;}
@@ -84,7 +86,8 @@
   section{padding-block:80px; border-top:1px solid var(--line);}
   .sh{font-family:'Archivo Black'; font-weight:400; font-size:clamp(2rem,4.4vw,3.4rem); line-height:1; letter-spacing:-.02em; margin:0 0 14px;}
   .sp{color:var(--ink2); font-size:1.06rem; line-height:1.65; max-width:62ch; margin:0 0 36px;}
-  .maps{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+  .maps{display:grid; grid-template-columns:repeat(2,1fr); gap:16px;}
+  .retired{margin-top:16px; font-family:'IBM Plex Mono'; font-size:.8rem; color:var(--ink2);}
   .map{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px;}
   .map .key{display:inline-flex; align-items:center; gap:8px; font-family:'IBM Plex Mono'; font-size:.74rem; padding:5px 10px; border-radius:6px; background:var(--bg2); margin-bottom:12px;}
   .map h3{margin:0 0 8px; font-size:1.2rem;} .map p{margin:0; color:var(--ink2); line-height:1.6; font-size:.95rem;}
@@ -119,7 +122,7 @@
     <div>
       <div class="label">android tv · accessibility service · sony bravia</div>
       <h1>Your remote,<br><em>your rules.</em></h1>
-      <p class="lede">The Sony remote has a YouTube button and a settings button, and neither does what I want. This tiny service quietly fixes both, and adds pop-up notifications the homelab can send to the TV.</p>
+      <p class="lede">On the home screen, the Sony remote's settings button opens Sony's quick settings, when what I want there is my app list. This tiny service quietly fixes that, and adds pop-up notifications the homelab can send to the TV.</p>
       <dl class="spec">
         <dt>UI</dt><dd>none</dd>
         <dt>network</dt><dd>none</dd>
@@ -134,35 +137,35 @@
       <div class="row"><button class="rb round" type="button" aria-label="Power">⏻</button><button class="rb round gear glow" id="btnGear" type="button" aria-label="Settings button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg></button></div>
       <div class="dpad"><span style="left:46%;top:6px">▲</span><span style="left:46%;bottom:6px">▼</span><span style="left:8px;top:44%">◀</span><span style="right:8px;top:44%">▶</span><div class="ok"></div></div>
       <div class="row"><button class="rb round" id="btnBack" type="button" aria-label="Back">↩</button><button class="rb round" id="btnHome" type="button" aria-label="Home">⌂</button></div>
-      <div class="apps"><button class="rb yt glow" id="btnYT" type="button">YouTube</button><button class="rb nf" type="button">NETFLIX</button><button class="rb" type="button">prime</button><button class="rb" type="button">disney+</button></div>
+      <div class="apps"><button class="rb yt" id="btnYT" type="button">YouTube</button><button class="rb nf" type="button">NETFLIX</button><button class="rb" type="button">prime</button><button class="rb" type="button">disney+</button></div>
       <div class="brand">SONY</div>
     </div>
 
     <div class="tvbox">
       <div class="tv"><div class="tvs">
-        <div class="app a-home on" data-app="home"><h4>Projectivy</h4><p>home screen</p><div class="rowcards"><i></i><i></i><i></i><i></i></div></div>
-        <div class="app a-st" data-app="smarttube"><h4>SmartTube</h4><p>no ads, no nonsense</p><div class="rowcards"><i></i><i></i><i></i></div></div>
-        <div class="app a-proj" data-app="projset"><h4>Projectivy</h4><p>home screen</p><div class="side"><b>Settings</b><span>Appearance</span><span>Channels</span><span>Wallpaper</span><span>About</span></div></div>
+        <div class="app a-home on" data-app="home"><h4>Hearth</h4><p>home screen</p><div class="rowcards"><i></i><i></i><i></i><i></i></div></div>
+        <div class="app a-yt" data-app="youtube"><h4>YouTube</h4><p>opens as normal</p><div class="rowcards"><i></i><i></i><i></i></div></div>
+        <div class="app a-all" data-app="allapps"><h4>All apps</h4><p>hold OK to add to home or hide</p><div class="grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
         <div class="app a-sony" data-app="sony"><h4>Sony settings</h4><p>picture · sound · network</p></div>
         <div class="popup" id="tvPopup"><b>Ready to watch</b>Spirited Away (2001)</div>
       </div></div>
       <div class="log" id="rmLog"><div class="d">TvButtonRemap service connected</div></div>
-      <div class="hint">press the glowing buttons on the remote</div>
+      <div class="hint">press the glowing button on the remote</div>
     </div>
   </div>
 
   <section class="wrap" id="how">
-    <h2 class="sh reveal">Three small fixes.</h2>
+    <h2 class="sh reveal">Two small fixes.</h2>
     <p class="sp reveal">Accessibility key filtering sees a key press before anything else on the TV does. That's the whole trick: catch the press, decide, and either swallow it or let it through.</p>
     <div class="maps">
-      <div class="map reveal"><span class="key">KEYCODE_BUTTON_9 · 196</span><h3>YouTube → SmartTube</h3><p>Everywhere. If SmartTube isn't installed, the button falls through and does what it always did.</p></div>
-      <div class="map reveal"><span class="key">KEYCODE_BUTTON_2 · 189</span><h3>Gear → Projectivy settings</h3><p>Only on the Projectivy home screen. Press again inside its settings or side panels and it backs all the way out. In any other app, Sony's settings open as usual.</p></div>
+      <div class="map reveal"><span class="key">KEYCODE_BUTTON_2 · 189</span><h3>Gear → All apps</h3><p>Only on the <a href="https://github.com/rusty-workshop/hearth">Hearth</a> home screen, where it opens All apps for adding, removing and hiding apps. Press it again and you're back home. In any other app, Sony's settings open as usual.</p></div>
       <div class="map reveal"><span class="key">am broadcast · DUMP only</span><h3>Pop-ups from the homelab</h3><p>A bottom-right card for 12 seconds that never steals focus. Only adb can send one, so nothing else on the TV can spam you. My Jellyfin setup uses it to announce new movies.</p></div>
     </div>
+    <p class="retired reveal">Retired: YouTube button → SmartTube (dropped in 1.6; the YouTube button opens YouTube again).</p>
     <div class="reveal" style="margin-top:40px">
-      <div class="label">what normally happens to the YouTube button</div>
-      <div class="chain"><span>remote</span><b>→</b><span>global key table</span><b>→</b><span class="x">sonyvendorservice</span><b>→</b><span class="x">Google TV</span><b>→</b><span class="x">YouTube</span></div>
-      <div class="chain"><span>remote</span><b>→</b><span class="hot">TvButtonRemap</span><b>→</b><span>SmartTube</span></div>
+      <div class="label">what normally happens to the gear button</div>
+      <div class="chain"><span>remote</span><b>→</b><span>global key table</span><b>→</b><span class="x">Sony quick settings</span></div>
+      <div class="chain"><span>remote</span><b>→</b><span class="hot">TvButtonRemap</span><b>→</b><span>Hearth · All apps</span></div>
     </div>
   </section>
 
@@ -177,7 +180,7 @@
 
   <section class="wrap" id="install">
     <h2 class="sh reveal">Install.</h2>
-    <p class="sp reveal">Build, install over adb, then switch the service on in Settings → Accessibility. Add your own remaps to the <span class="mono">remaps</span> or <span class="mono">launcherRemaps</span> maps in <span class="mono">RemapService.kt</span>.</p>
+    <p class="sp reveal">Build, install over adb, then switch the service on in Settings → Accessibility. Add your own home-screen remaps to the <span class="mono">launcherRemaps</span> map in <span class="mono">RemapService.kt</span>.</p>
 <pre class="reveal">./gradlew assembleRelease
 adb connect &lt;tv-ip&gt;:5555
 adb install -r app/build/outputs/apk/release/app-release.apk
@@ -204,14 +207,14 @@ adb shell am broadcast -n com.rusty.tvremap/.MessageReceiver \
   document.getElementById('btnYT').addEventListener('click', function(){
     press(this);
     line('<span class="k">D/TvButtonRemap</span> key 196 KEYCODE_BUTTON_9');
-    line('<span class="g">  consumed → launch SmartTube</span>');
-    show('smarttube');
+    line('<span class="d">  no remap, passing through → YouTube</span>');
+    show('youtube');
   });
   document.getElementById('btnGear').addEventListener('click', function(){
     press(this);
     line('<span class="k">D/TvButtonRemap</span> key 189 KEYCODE_BUTTON_2 · front: ' + app);
-    if (app === 'home'){ line('<span class="g">  consumed → Projectivy settings</span>'); show('projset'); }
-    else if (app === 'projset'){ line('<span class="g">  consumed → back out to home</span>'); show('home'); }
+    if (app === 'home'){ line('<span class="g">  consumed → Hearth · All apps</span>'); show('allapps'); }
+    else if (app === 'allapps'){ line('<span class="g">  consumed → back to Hearth</span>'); show('home'); }
     else { line('<span class="d">  not on the launcher, passing through</span>'); show('sony'); }
   });
   document.getElementById('btnHome').addEventListener('click', function(){ press(this); line('<span class="d">key HOME, passing through</span>'); show('home'); });
