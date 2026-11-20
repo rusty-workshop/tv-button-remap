@@ -12,25 +12,18 @@ import android.view.accessibility.AccessibilityEvent
 
 /**
  * Catches remote buttons before Sony/Google TV's global-key handling and
- * opens something else instead.
- *
- * On the BRAVIA, the YouTube button sends KEYCODE_BUTTON_9 (196), which the
- * system routes to sonyvendorservice -> Google TV -> YouTube. Accessibility
- * key filtering runs before that routing, so consuming the key here stops
- * YouTube from opening at all.
+ * opens something else instead. Accessibility key filtering runs before
+ * that routing, so consuming a key here stops its normal action entirely.
+ * (The YouTube button -> SmartTube remap was dropped in 1.6.)
  */
 class RemapService : AccessibilityService() {
 
-    // keycode -> package to open instead, anywhere
-    private val remaps = mapOf(
-        KeyEvent.KEYCODE_BUTTON_9 to "org.smarttube.stable",
-    )
-
-    // keycode -> intent action, only while the launcher is in the foreground.
+    // keycode -> intent action, only while the launcher's home screen is in front.
     // The remote's gear button is KEYCODE_BUTTON_2 (189), which normally goes
     // to Sony's quick-settings receiver, not the standard KEYCODE_SETTINGS.
+    // On Hearth it opens All apps (add, remove and hide apps).
     private val launcherRemaps = mapOf(
-        KeyEvent.KEYCODE_BUTTON_2 to "tv.projectivy.SETTINGS",
+        KeyEvent.KEYCODE_BUTTON_2 to "com.rusty.hearth.ALL_APPS",
     )
 
     // Package and class of the last activity that came to the foreground.
@@ -60,21 +53,12 @@ class RemapService : AccessibilityService() {
         if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
             Log.d(TAG, "key ${event.keyCode} (${KeyEvent.keyCodeToString(event.keyCode)}) fg=$foreground/$foregroundClass")
         }
-        remaps[event.keyCode]?.let { return launchPackage(event, it) }
         launcherRemaps[event.keyCode]?.let { action ->
-            // Pressing it again while Projectivy's settings are open closes them.
+            // Pressing it again while Hearth's All apps is open closes it.
             if (inLauncherSettings()) return closeLauncherSettings(event)
-            if (foreground == LAUNCHER) return launchAction(event, action)
+            if (foreground == LAUNCHER && foregroundClass == LAUNCHER_HOME) return launchAction(event, action)
         }
         return false
-    }
-
-    private fun launchPackage(event: KeyEvent, target: String): Boolean {
-        val launch = packageManager.getLeanbackLaunchIntentForPackage(target)
-            ?: packageManager.getLaunchIntentForPackage(target)
-        // Target uninstalled: let the button do its normal thing.
-        if (launch == null) return false
-        return fire(event, launch, target)
     }
 
     private fun launchAction(event: KeyEvent, action: String): Boolean {
@@ -93,14 +77,13 @@ class RemapService : AccessibilityService() {
         return true
     }
 
-    // Projectivy's side panels, plus the guided-action screens opened from them.
+    // Hearth's All apps screen.
     private fun inLauncherSettings(): Boolean {
         val cls = foregroundClass ?: return false
         return foreground == LAUNCHER && LAUNCHER_SETTINGS.any { cls.startsWith(it) }
     }
 
-    // Back out of the settings panel and any sub-screens, one level at a
-    // time, until Projectivy's home screen is in front again.
+    // Back out one level at a time until Hearth's home screen is in front again.
     private fun closeLauncherSettings(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
             Log.i(TAG, "keycode ${event.keyCode} -> close $foregroundClass")
@@ -141,13 +124,10 @@ class RemapService : AccessibilityService() {
             private set
 
         private const val TAG = "TvButtonRemap"
-        private const val LAUNCHER = "com.spocky.projengmenu"
-        // All side panels, not just settings: backing out of the settings
-        // panel lands on the all-apps side panel underneath it.
-        private val LAUNCHER_SETTINGS = listOf(
-            "$LAUNCHER.ui.sidePanels.",
-            "$LAUNCHER.ui.guidedActions.",
-        )
+        // Hearth (rusty-workshop/hearth) replaced Projectivy as the home screen.
+        private const val LAUNCHER = "com.rusty.hearth"
+        private const val LAUNCHER_HOME = "$LAUNCHER.HomeActivity"
+        private val LAUNCHER_SETTINGS = listOf("$LAUNCHER.AllAppsActivity")
         private const val MAX_BACKS = 6
         private const val BACK_DELAY_MS = 250L
     }

@@ -2,18 +2,18 @@
 
 A tiny Android TV accessibility service for the Sony BRAVIA remote:
 
-- **YouTube** button opens **SmartTube** instead, everywhere.
-- **Settings** (gear) button opens **Projectivy's settings**, but only while
-  the Projectivy home screen is in front. Pressing it again while
-  Projectivy's settings (or any of its side panels or sub-screens) are open
-  backs out of all of them to the home screen. In any other app it opens
-  Sony's settings as usual.
+- **Settings** (gear) button opens **All apps** in
+  [Hearth](https://github.com/rusty-workshop/hearth), but only while Hearth's
+  home screen is in front. Pressing it again while All apps is open goes back
+  to the home screen. In any other app it opens Sony's settings as usual.
+  (Before Hearth, this opened Projectivy's settings.)
 
-The YouTube button sends `KEYCODE_BUTTON_9` (196). Android routes it through
-the global-key table to Sony's `sonyvendorservice`, which hands it to Google
-TV, which opens YouTube. Accessibility key filtering sees the key first, so
-this service consumes it and launches SmartTube. If SmartTube isn't
-installed, the button falls through to its normal behavior.
+The gear button sends `KEYCODE_BUTTON_2` (189), which normally goes to Sony's
+quick-settings receiver. Accessibility key filtering sees keys before Sony's
+global-key handling, so the service can consume it and open something else.
+
+The YouTube button (`KEYCODE_BUTTON_9`, 196) used to open SmartTube the same
+way. That remap was dropped in 1.6, and the button opens YouTube as normal.
 
 It also shows **pop-ups** (bottom-right card, 12 s, never takes focus) for
 anything that sends:
@@ -54,7 +54,7 @@ adb -s 192.168.1.75:5555 install -r app/build/outputs/apk/release/app-release.ap
 ```
 
 Enable the service (appending to any already-enabled services, such as
-Projectivy). Run this after every install: the system can rewrite the
+Hearth's Home-button service). Run this after every install: the system can rewrite the
 setting while the package is being replaced.
 
 ```bash

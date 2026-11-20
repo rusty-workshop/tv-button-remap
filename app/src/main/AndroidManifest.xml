@@ -3,10 +3,9 @@
 
     <!-- Android 11+ package visibility: the apps and intents this service launches. -->
     <queries>
-        <package android:name="org.smarttube.stable" />
-        <package android:name="com.spocky.projengmenu" />
+        <package android:name="com.rusty.hearth" />
         <intent>
-            <action android:name="tv.projectivy.SETTINGS" />
+            <action android:name="com.rusty.hearth.ALL_APPS" />
         </intent>
     </queries>
 
